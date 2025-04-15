@@ -1,0 +1,82 @@
+<head>
+  <meta charset="UTF-8">
+  <title>F1 Team Pace Rankings</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+ 
+<form action="/generate" method="post">
+  <label>Year:
+    <input list="year-options" name="year" id="year-input" placeholder="Enter year" required>
+  </label>
+  
+
+  <label>Race:
+    <select name="gp_name" id="race-dropdown" required>
+      <option>Select a year first...</option>
+    </select>
+  </label>
+
+  <label>Session:
+    <select name="session_type">
+      <option value="FP1">FP1</option>
+      <option value="FP2" selected>FP2</option>
+      <option value="FP3">FP3</option>
+      <option value="Q">Qualifying</option>
+      <option value="R">Race</option>
+    </select>
+  </label>
+
+  <button type="submit">Generate Chart</button>
+</form>
+
+{% if request.args.get('year') %}
+  <h2>Latest Pace Chart</h2>
+  <img src="/plot?year={{ request.args.get('year') }}&gp_name={{ request.args.get('gp_name') }}&session_type={{ request.args.get('session_type') }}" 
+       alt="F1 Pace Chart" 
+       style="max-width: 90%; border: 2px solid #333; border-radius: 10px;">
+{% endif %}
+
+
+
+<script>
+  const yearInput = document.getElementById('year-input');
+  const raceDropdown = document.getElementById('race-dropdown');
+
+  function loadRaces(year) {
+    if (!year || year.length !== 4) return;
+
+    fetch(`/races/${year}`)
+      .then(res => {
+        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+        return res.json();
+      })
+      .then(races => {
+        raceDropdown.innerHTML = '';
+        if (races.length === 0) {
+          raceDropdown.innerHTML = '<option>No races found</option>';
+          return;
+        }
+        races.forEach(race => {
+          const opt = document.createElement('option');
+          opt.value = race;
+          opt.textContent = race;
+          raceDropdown.appendChild(opt);
+        });
+      })
+      .catch(err => {
+        raceDropdown.innerHTML = '<option>Error loading races</option>';
+        console.error('Failed to load races:', err);
+      });
+  }
+
+  // Trigger load when input loses focus or typing reaches 4 digits
+  yearInput.addEventListener('blur', () => loadRaces(yearInput.value.trim()));
+  yearInput.addEventListener('input', () => {
+    const year = yearInput.value.trim();
+    if (year.length === 4) {
+      loadRaces(year);
+    }
+  });
+</script>
+
+
