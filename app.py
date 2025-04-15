@@ -44,8 +44,9 @@ def plot():
         session_type = request.args.get('session_type')
 
         session = fastf1.get_session(year, gp_name, session_type)
-        session.load()
+        session.load(laps=True, telemetry=False, weather=False, messages=False)
         laps = session.laps.pick_quicklaps()
+
 
         transformed_laps = laps.copy()
         transformed_laps["LapTime (s)"] = laps["LapTime"].dt.total_seconds()
